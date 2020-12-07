@@ -29,9 +29,8 @@ django.setup()
 from commoncode.hash import multi_checksums
 from scancode_config import __version__ as scancode_version
 
-from scanner.tasks import get_bin_executable
-from scanner.tasks import run_command
 from scanpipe.pipes import copy_inputs
+from scanpipe.pipes import scancode
 from scanpipe.pipelines import Pipeline
 from scanpipe.pipelines import step
 
@@ -63,12 +62,13 @@ class ScanPackageArchive(Pipeline):
         Load the Project instance.
         """
         self.project = self.get_project(self.project_name)
-        self.next(self.validate_single_archive_input)
+        self.next(self.validate_and_copy_single_archive_input)
 
     @step
-    def validate_single_archive_input(self):
+    def validate_and_copy_single_archive_input(self):
         """
         Ensure that the input for this Pipeline is a single archive.
+        Copy the input to the project codebase/ directory.
         """
         input_files = self.project.input_files
         if len(input_files) != 1:
@@ -100,11 +100,7 @@ class ScanPackageArchive(Pipeline):
         """
         Extract archive with extractcode.
         """
-        extractcode_args = [
-            get_bin_executable("extractcode"),
-            str(self.project.tmp_path),
-        ]
-        exitcode, output = run_command(extractcode_args)
+        scancode.run_extractcode(location=str(self.project.codebase_path))
 
         self.next(self.run_scancode)
 
@@ -114,16 +110,11 @@ class ScanPackageArchive(Pipeline):
         Scan extracted archive content.
         """
         output_file = self.project.output_path / f"scan_{scancode_version}.json"
-
-        scancode_args = [
-            get_bin_executable("scancode"),
-            str(self.project.tmp_path),
-            *self.scancode_options,
-            # f"--processes {SCAN_PROCESSES}",
-            # f"--max-in-memory {SCAN_MAX_IN_MEMORY}",
-            f"--json-pp {output_file}",
-        ]
-        exitcode, output = run_command(scancode_args)
+        scancode.run_scancode(
+            location=str(self.project.codebase_path),
+            output_file=output_file,
+            options=self.scancode_options,
+        )
 
         self.next(self.collect_key_files_data)
 
