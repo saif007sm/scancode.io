@@ -21,8 +21,8 @@
 # Visit https://github.com/nexB/scancode.io for support and download.
 
 from scanpipe.management.commands import ProjectCommand
-from scanpipe.management.commands import copy_inputs
 from scanpipe.management.commands import validate_inputs
+from scanpipe.pipes import copy_inputs
 
 
 class Command(ProjectCommand):

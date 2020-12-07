@@ -31,7 +31,7 @@ from scancode_config import __version__ as scancode_version
 
 from scanner.tasks import get_bin_executable
 from scanner.tasks import run_command
-from scanpipe.management.commands import copy_inputs
+from scanpipe.pipes import copy_inputs
 from scanpipe.pipelines import Pipeline
 from scanpipe.pipelines import step
 

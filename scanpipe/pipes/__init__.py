@@ -20,6 +20,7 @@
 # ScanCode.io is a free software code scanning tool from nexB Inc. and others.
 # Visit https://github.com/nexB/scancode.io for support and download.
 
+import shutil
 import traceback
 from datetime import datetime
 from functools import partial
@@ -315,3 +316,12 @@ def filename_now(sep="-"):
     """
     now = datetime.now().isoformat(sep=sep, timespec="seconds")
     return now.replace(":", sep)
+
+
+def copy_inputs(inputs, dest_path):
+    """
+    Copy the provided `inputs` to the `dest_path`.
+    """
+    for input_location in inputs:
+        destination = dest_path / Path(input_location).name
+        shutil.copyfile(input_location, destination)

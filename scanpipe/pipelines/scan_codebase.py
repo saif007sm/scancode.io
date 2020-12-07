@@ -30,7 +30,7 @@ from scanpipe.pipelines import Pipeline
 from scanpipe.pipelines import step
 from scanpipe.pipes import outputs
 from scanpipe.pipes import scancode
-from scanpipe.management.commands import copy_inputs
+from scanpipe.pipes import copy_inputs
 
 
 class ScanCodebase(Pipeline):

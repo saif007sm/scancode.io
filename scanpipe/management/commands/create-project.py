@@ -25,10 +25,10 @@ from django.core.management import CommandError
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
-from scanpipe.management.commands import copy_inputs
 from scanpipe.management.commands import validate_inputs
 from scanpipe.management.commands import validate_pipelines
 from scanpipe.models import Project
+from scanpipe.pipes import copy_inputs
 
 
 class Command(BaseCommand):
