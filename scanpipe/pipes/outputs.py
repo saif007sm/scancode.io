@@ -20,6 +20,7 @@
 # ScanCode.io is a free software code scanning tool from nexB Inc. and others.
 # Visit https://github.com/nexB/scancode.io for support and download.
 
+import csv
 import json
 
 from django.core.serializers.json import DjangoJSONEncoder
@@ -29,12 +30,69 @@ from scancodeio import __version__ as scancodeio_version
 from scanpipe.api.serializers import CodebaseResourceSerializer
 from scanpipe.api.serializers import DiscoveredPackageSerializer
 from scanpipe.api.serializers import RunSerializer
+from scanpipe.api.serializers import get_serializer_fields
 
 
-class ResultsGenerator:
+def queryset_to_csv_file(queryset, fieldnames, output_file):
     """
-    Return `project` results as a generator.
-    This allow to stream those results from the database to the client browser
+    Output csv content generated from the provided `queryset` objects to the
+    `output_file`.
+    The fields to include as columns and their order are controlled by the
+    `fieldnames` list.
+    """
+    writer = csv.DictWriter(output_file, fieldnames)
+    writer.writeheader()
+
+    for record in queryset.iterator():
+        row = {field: getattr(record, field) for field in fieldnames}
+        writer.writerow(row)
+
+
+def queryset_to_csv_stream(queryset, fieldnames, output_stream):
+    """
+    Output csv content generated from the provided `queryset` objects to the
+    `output_stream`.
+    The fields to include as columns and their order are controlled by the
+    `fieldnames` list.
+    """
+    writer = csv.DictWriter(output_stream, fieldnames)
+    # Not using writer.writeheader() since this method do not "return" the
+    # value while writer.writerow() does.
+    header = dict(zip(fieldnames, fieldnames))
+    yield writer.writerow(header)
+
+    for record in queryset.iterator():
+        row = {field: getattr(record, field) for field in fieldnames}
+        yield writer.writerow(row)
+
+
+def to_csv(project):
+    """
+    Generate results output for the provided `project` as csv format.
+    Since the csv format does not support multiple tabs, one file is created
+    per object type.
+    The output files are created in the `project` output/ directory.
+    """
+    querysets = [
+        project.discoveredpackages.all(),
+        project.codebaseresources.without_symlinks(),
+    ]
+
+    for queryset in querysets:
+        model_class = queryset.model
+        fieldnames = get_serializer_fields(model_class)
+
+        model_name = model_class._meta.model_name
+        output_filename = project.get_output_file_path(f"{model_name}", "csv")
+
+        with output_filename.open("w") as output_file:
+            queryset_to_csv_file(queryset, fieldnames, output_file)
+
+
+class JSONResultsGenerator:
+    """
+    Return the `project` JSON results as a Python generator.
+    Use this class to stream the results from the database to the client browser
     without having to load everything in memory first.
 
     Note that the Django Serializer class can output to a stream but cannot be
@@ -97,7 +155,21 @@ class ResultsGenerator:
 
     def get_files(self, project):
         resources = project.codebaseresources.without_symlinks()
-        resources = resources.prefetch_related("discovered_packages")
 
         for obj in resources.iterator():
             yield self.encode(CodebaseResourceSerializer(obj).data)
+
+
+def to_json(project):
+    """
+    Generate results output for the provided `project` as JSON format.
+    The output file is created in the `project` output/ directory.
+    """
+    results_generator = JSONResultsGenerator(project)
+    output_file = project.get_output_file_path("results", "json")
+
+    with output_file.open("w") as file:
+        for chunk in results_generator:
+            file.write(chunk)
+
+    return output_file

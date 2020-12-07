@@ -1,7 +1,47 @@
 // Release notes
 // -------------
 
-### v1.0.4 (unreleased)
+### v1.0.5 (2020-12-07)
+
+- Add minimal license list and text views
+  https://github.com/nexB/scancode.io/issues/32
+
+- Add admin actions to export selected objects to CSV and JSON
+  The output content, such as included fields, can be configured for CSV format
+  https://github.com/nexB/scancode.io/issues/48
+  https://github.com/nexB/scancode.io/issues/49
+
+- Add --list option to the graph management command.
+  Multiple graphs can now be generated at once.
+
+- Add ProjectCodebase to help walk and navigate Project CodebaseResource
+  loaded from the Database
+  Add also a get_tree function compatible with scanpipe.CodebaseResource and
+  commoncode.Resource
+  https://github.com/nexB/scancode.io/issues/52
+
+- Add support for running ScanCode.io as a Docker image
+  https://github.com/nexB/scancode.io/issues/9
+
+- Add support for Python 3.7, 3.8, and 3.9
+  https://github.com/nexB/scancode.io/issues/54
+
+### v1.0.4 (2020-11-17)
+
+- Add a to_json output pipe returning ScanCode compatible content
+  https://github.com/nexB/scancode.io/issues/45
+
+- Improve Admin UI for efficient review:
+  display, navigation, filters, and ability to view file content
+  https://github.com/nexB/scancode.io/issues/36
+
+- Add Pipelines and Pipes documentation using Sphinx autodoc
+  Fix for https://github.com/nexB/scancode.io/issues/38
+
+- Add new ScanCodebase pipeline for codebase scan
+  Fix for https://github.com/nexB/scancode.io/issues/37
+
+- Upgrade Django, Metaflow, and ScanCode-toolkit to latest versions
 
 ### v1.0.3 (2020-09-24)
 

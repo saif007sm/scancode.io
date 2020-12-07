@@ -1,21 +1,21 @@
 # Configuration tools
-pip==20.2.2
-setuptools==50.0.3
-wheel==0.35.1
+pip==20.3.1
+setuptools==51.0.0
+wheel==0.36.1
 
 # Django related
-Django==3.1.1
+Django==3.1.4
 django-environ==0.4.5
-django-crispy-forms==1.9.2
-pytz==2020.1
-django-filter==2.3.0
-djangorestframework==3.11.1
+django-crispy-forms==1.10.0
+pytz==2020.4
+django-filter==2.4.0
+djangorestframework==3.12.2
 
 # Database
 psycopg2==2.8.6
 
 # HTTP
-requests==2.24.0
+requests==2.25.0
 
 # Task queue
 celery==4.4.7
@@ -26,10 +26,10 @@ kombu==4.6.11
 gunicorn==20.0.4
 
 # Metaflow
-metaflow==2.2.3
+metaflow==2.2.5
 
 # Docker
 container_inspector==3.1.2
 
 # ScanCode-toolkit
-scancode-toolkit==3.2.1rc2
+scancode-toolkit[full]==3.2.3

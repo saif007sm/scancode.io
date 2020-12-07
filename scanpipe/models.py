@@ -281,6 +281,17 @@ class Project(UUIDPKModel, models.Model):
         """
         return self.get_root_content(self.output_path)
 
+    def get_output_file_path(self, name, extension):
+        """
+        Return a crafted file path in the project output/ directory using
+        the provided `name` and `extension`.
+        The current date and time string is added to the filename.
+        """
+        from scanpipe.pipes import filename_now
+
+        filename = f"{name}-{filename_now()}.{extension}"
+        return self.output_path / filename
+
     def add_input_file(self, file_object):
         """
         Write the provided `file_object` to this project input/ directory.
@@ -603,10 +614,46 @@ class CodebaseResource(
         return self.path
 
     @property
-    def location(self):
+    def location_path(self):
         # strip the leading / to allow joining this with the codebase_path
         path = Path(str(self.path).strip("/"))
-        return str(self.project.codebase_path / path)
+        return self.project.codebase_path / path
+
+    @property
+    def location(self):
+        return str(self.location_path)
+
+    @property
+    def is_file(self):
+        return self.type == self.Type.FILE
+
+    @property
+    def is_dir(self):
+        return self.type == self.Type.DIRECTORY
+
+    @property
+    def is_symlink(self):
+        return self.type == self.Type.SYMLINK
+
+    def descendants(self):
+        """
+        Return a QuerySet of descendant CodebaseResource objects using a
+        Database query on this CodebaseResource `path`.
+        The current CodebaseResource is not included.
+        """
+        return self.project.codebaseresources.filter(path__startswith=f"{self.path}/")
+
+    def children(self, codebase=None):
+        """
+        Return a QuerySet of direct children CodebaseResource objects using a
+        Database query on this CodebaseResource `path`.
+
+        `codebase` is not used in this context but required for compatibility
+        with the commoncode.resource.VirtualCodebase class API.
+        """
+        exactly_one_sub_directory = "[^/]+$"
+        children_regex = rf"^{self.path}/{exactly_one_sub_directory}"
+        return self.descendants().filter(path__regex=children_regex)
 
     @property
     def file_content(self):
@@ -649,6 +696,10 @@ class DiscoveredPackage(ProjectRelatedModel, SaveProjectErrorMixin, AbstractPack
 
     def __str__(self):
         return self.package_url or str(self.uuid)
+
+    @property
+    def purl(self):
+        return self.package_url
 
     @classmethod
     def create_from_data(cls, project, package_data):

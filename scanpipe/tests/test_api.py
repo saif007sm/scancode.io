@@ -34,11 +34,15 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIClient
 
-from scanpipe.api.views import ResultsGenerator
+from scanpipe.api.serializers import CodebaseResourceSerializer
+from scanpipe.api.serializers import DiscoveredPackageSerializer
+from scanpipe.api.serializers import get_model_serializer
+from scanpipe.api.serializers import get_serializer_fields
 from scanpipe.models import CodebaseResource
 from scanpipe.models import DiscoveredPackage
 from scanpipe.models import Project
 from scanpipe.models import ProjectError
+from scanpipe.pipes.outputs import JSONResultsGenerator
 from scanpipe.tests import package_data1
 
 
@@ -152,7 +156,7 @@ class ScanPipeAPITest(TransactionTestCase):
         self.assertEqual(["upload_file"], response.data["input_root"])
 
     def test_scanpipe_api_project_results_generator(self):
-        results_generator = ResultsGenerator(self.project1)
+        results_generator = JSONResultsGenerator(self.project1)
         results = json.loads("".join(results_generator))
 
         expected = ["files", "headers", "packages"]
@@ -325,3 +329,19 @@ class ScanPipeAPITest(TransactionTestCase):
         expected = {"status": f"Pipeline {run1.pipeline} resumed."}
         self.assertEqual(expected, response.data)
         mock_resume_pipeline_task.assert_called_once()
+
+    def test_scanpipe_api_serializer_get_model_serializer(self):
+        self.assertEqual(
+            DiscoveredPackageSerializer, get_model_serializer(DiscoveredPackage)
+        )
+        self.assertEqual(
+            CodebaseResourceSerializer, get_model_serializer(CodebaseResource)
+        )
+        with self.assertRaises(LookupError):
+            get_model_serializer(None)
+
+    def test_scanpipe_api_serializer_get_serializer_fields(self):
+        self.assertEqual(28, len(get_serializer_fields(DiscoveredPackage)))
+        self.assertEqual(20, len(get_serializer_fields(CodebaseResource)))
+        with self.assertRaises(LookupError):
+            get_serializer_fields(None)

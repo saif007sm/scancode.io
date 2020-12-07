@@ -30,10 +30,9 @@ from django.conf import settings
 # Django starts so that shared_task will use this app.
 from scancodeio.celery import app as celery_app
 
-__version__ = "1.0.3"
+__version__ = "1.0.5"
 
-ROOT_DIR = Path(__file__).parent.parent.absolute()
-SCAN_NOTICE = (ROOT_DIR / "scan.NOTICE").read_text()
+SCAN_NOTICE = Path(__file__).resolve().parent.joinpath("scan.NOTICE").read_text()
 
 
 def get_workspace_location():
