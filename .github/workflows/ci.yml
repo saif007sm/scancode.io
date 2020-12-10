@@ -5,6 +5,9 @@ on: [push, pull_request]
 env:
   # Run tasks in the current thread, no need for workers in CI mode
   CELERY_TASK_ALWAYS_EAGER: True
+  DB_HOST: localhost
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
 #  POSTGRES_DB: scancodeio
 #  POSTGRES_USER: scancodeio
 #  POSTGRES_PASSWORD: scancodeio
@@ -15,25 +18,23 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       postgres:
-        image: postgres:11
+        image: postgres:10
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
-          - 5432/tcp
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
 
     steps:
       - name: PostgreSQL
         run: createdb test
         env:
           POSTGRES_HOST: postgres
-          POSTGRES_PORT: 5432
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
 
 #    strategy:
 #      max-parallel: 4
