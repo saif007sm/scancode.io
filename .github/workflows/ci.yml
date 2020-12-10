@@ -18,7 +18,13 @@ jobs:
     services:
       postgres:
         image: postgres:10
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        env:
+          POSTGRES_PASSWORD: scancodeio
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
 
     steps:
     - uses: actions/checkout@v2
