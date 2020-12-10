@@ -5,51 +5,74 @@ on: [push, pull_request]
 env:
   # Run tasks in the current thread, no need for workers in CI mode
   CELERY_TASK_ALWAYS_EAGER: True
-  POSTGRES_DB: scancodeio
-  POSTGRES_USER: scancodeio
-  POSTGRES_PASSWORD: scancodeio
+#  POSTGRES_DB: scancodeio
+#  POSTGRES_USER: scancodeio
+#  POSTGRES_PASSWORD: scancodeio
 
 jobs:
   build:
 
     runs-on: ubuntu-20.04
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
-
     services:
       postgres:
-        image: postgres:10
+        image: postgres
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          POSTGRES_HOST_AUTH_METHOD: trust
-        ports:
-          - 5432:5432
+          POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Dependencies
-      run: |
-        make dev
-        make envfile
-    - name: Check Code Validation
-      run: |
-        make check
-    - name: Create Database
-      run: |
-        createdb --encoding=utf-8 -p 5432 -U ${{ env.POSTGRES_USER }} ${{ env.POSTGRES_DB }}
-    - name: Run Tests
-      run: |
-        python manage.py test --settings=scancodeio.settings.base --verbosity=2 --noinput
+      - name: PostgreSQL
+        run: createdb test
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+
+#    strategy:
+#      max-parallel: 4
+#      matrix:
+#        python-version: [3.6, 3.7, 3.8, 3.9]
+#
+#    services:
+#      postgres:
+#        image: postgres:10
+#        env:
+#          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+#          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+#          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+#          POSTGRES_HOST_AUTH_METHOD: trust
+#        ports:
+#          - 5432:5432
+#        options: >-
+#          --health-cmd pg_isready
+#          --health-interval 10s
+#          --health-timeout 5s
+#          --health-retries 5
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#    - name: Set up Python ${{ matrix.python-version }}
+#      uses: actions/setup-python@v2
+#      with:
+#        python-version: ${{ matrix.python-version }}
+#    - name: Install Dependencies
+#      run: |
+#        make dev
+#        make envfile
+#    - name: Check Code Validation
+#      run: |
+#        make check
+#    - name: Create Database
+#      run: |
+#        createdb --encoding=utf-8 -p 5432 -U ${{ env.POSTGRES_USER }} ${{ env.POSTGRES_DB }}
+#      env:
+#        PGPASSWORD: postgres
+#    - name: Run Tests
+#      run: |
+#        python manage.py test --settings=scancodeio.settings.base --verbosity=2 --noinput
