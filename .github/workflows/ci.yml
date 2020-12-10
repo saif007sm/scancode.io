@@ -5,6 +5,8 @@ on: [push, pull_request]
 env:
   # Run tasks in the current thread, no need for workers in CI mode
   CELERY_TASK_ALWAYS_EAGER: True
+  POSTGRES_DB: scancodeio
+  POSTGRES_USER: scancodeio
   POSTGRES_PASSWORD: scancodeio
 
 jobs:
@@ -20,13 +22,17 @@ jobs:
       postgres:
         image: postgres:10
         env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          options: >-
-            --health-cmd pg_isready
-            --health-interval 10s
-            --health-timeout 5s
-            --health-retries 5
-          ports: 5432:5432
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
     - uses: actions/checkout@v2
@@ -43,7 +49,7 @@ jobs:
         make check
     - name: Create Database
       run: |
-        createdb --encoding=utf-8 scancodeio
+        createdb --encoding=utf-8 -p 5432 -U ${{ env.POSTGRES_USER }} ${{ env.POSTGRES_DB }}
     - name: Run Tests
       run: |
         python manage.py test --settings=scancodeio.settings.base --verbosity=2 --noinput
