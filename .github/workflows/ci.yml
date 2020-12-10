@@ -8,32 +8,30 @@ env:
   DB_HOST: postgres
   DB_USERNAME: postgres
   DB_PASSWORD: postgres
-#  POSTGRES_DB: scancodeio
-#  POSTGRES_USER: scancodeio
-#  POSTGRES_PASSWORD: scancodeio
+  POSTGRES_DB: postgres
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
 
 jobs:
   build:
 
     runs-on: ubuntu-20.04
     services:
-      postgres:
-        image: postgres:10
+      db:
+        image: postgres:12.3-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
+        options: --mount type=tmpfs,destination=/var/lib/postgresql/data --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - name: PostgreSQL
         run: |
           psql -c "\l"
-          createdb test
+          createdb potsgres
         env:
           POSTGRES_HOST: postgres
           POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
