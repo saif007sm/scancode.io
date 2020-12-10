@@ -31,7 +31,7 @@ jobs:
       - name: PostgreSQL
         run: createdb test
         env:
-          POSTGRES_HOST: localhost
+          POSTGRES_HOST: postgres
           POSTGRES_PORT: 5432
 
 #    strategy:
